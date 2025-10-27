@@ -7,10 +7,9 @@ export default function CreateAccount() {
     <div className="flex flex-col gap-10 py-8 px-6">
       <div className="flex flex-col gap-2 *:font-medium">
         <h1 className="text-2xl">안녕하세요!</h1>
-        <h2 className="text-xl">Fill in the form below to join!</h2>
+        <h2 className="text-xl">Login.</h2>
       </div>
       <form className="flex flex-col gap-3">
-        <FormInput required type="text" placeholder="User Name" errors={[]} />
         <FormInput required type="email" placeholder="email" errors={[]} />
         <FormInput
           required
@@ -18,13 +17,7 @@ export default function CreateAccount() {
           placeholder="password"
           errors={[]}
         />
-        <FormInput
-          required
-          type="password"
-          placeholder="Confirm password"
-          errors={[]}
-        />
-        <FormButton loading={false} text="Create account" />
+        <FormButton loading={false} text="Login" />
       </form>
       <SocialLogin />
     </div>
