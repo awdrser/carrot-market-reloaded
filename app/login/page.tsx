@@ -15,13 +15,7 @@ export default function CreateAccount() {
         <h2 className="text-xl">Login.</h2>
       </div>
       <form action={action} className="flex flex-col gap-3">
-        <FormInput
-          required
-          type="email"
-          placeholder="email"
-          errors={[]}
-          name="email"
-        />
+        <FormInput required type="email" placeholder="email" name="email" />
         <FormInput
           name="password"
           required
