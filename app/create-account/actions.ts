@@ -1,7 +1,6 @@
 "use server";
 import { z } from "zod";
-
-const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX } from "../lib/constants";
 
 const crossCheckPassword = ({
   password,
@@ -18,12 +17,12 @@ const crossCheckPassword = ({
 const formSchema = z
   .object({
     userName: z.string().min(2, "너무 짧습니다.").max(10, "너무 깁니다."),
-    email: z.email().toLowerCase().trim(),
+    email: z.email().toLowerCase().trim().toLowerCase(),
     password: z
       .string()
       .min(10)
-      .regex(specialCharRegex, { error: "특수기호가 들어가야 합니다." }),
-    confirmPassword: z.string().min(10),
+      .regex(PASSWORD_REGEX, { error: "특수기호가 포함되어야 합니다." }),
+    confirmPassword: z.string().min(PASSWORD_MIN_LENGTH),
   })
   .refine(crossCheckPassword, {
     error: "비밀번호가 일치하지 않습니다.",
