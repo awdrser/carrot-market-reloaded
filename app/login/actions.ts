@@ -2,6 +2,7 @@
 
 import bcrypt from "bcrypt";
 
+import { redirect } from "next/navigation";
 import z from "zod";
 import db from "../lib/db";
 import getSession from "../lib/session";
@@ -58,6 +59,7 @@ export default async function login(prevState: any, formData: FormData) {
       const session = await getSession();
       session.id = user!.id;
       await session.save();
+      redirect("/profile");
     } else {
       return {
         fieldErrors: { email: [], password: ["잘못된 비밀번호입니다."] },

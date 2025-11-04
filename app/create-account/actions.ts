@@ -1,5 +1,6 @@
 "use server";
 import bcrypt from "bcrypt";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import db from "../lib/db";
 import getSession from "../lib/session";
@@ -94,5 +95,6 @@ export async function createAccount(prevItem: any, formData: FormData) {
     //@ts-ignore
     session.id = user.id;
     await session.save();
+    redirect("/profile");
   }
 }
