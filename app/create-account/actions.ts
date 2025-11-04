@@ -1,10 +1,8 @@
 "use server";
 import bcrypt from "bcrypt";
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
 import { z } from "zod";
-import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX } from "../lib/constants";
 import db from "../lib/db";
+import getSession from "../lib/session";
 
 const crossCheckPassword = ({
   password,
@@ -18,49 +16,51 @@ const crossCheckPassword = ({
   } else return false;
 };
 
-const checkUniqueUsername = async (username: string) => {
-  const user = await db.user.findUnique({
-    where: {
-      username,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  return !Boolean(user);
-};
-
-const checkUniqueEmail = async (email: string) => {
-  const user = await db.user.findUnique({
-    where: {
-      email,
-    },
-    select: {
-      id: true,
-    },
-  });
-  return !Boolean(user);
-};
-
 const formSchema = z
   .object({
-    userName: z
-      .string()
-      .min(2, "너무 짧습니다.")
-      .max(10, "너무 깁니다.")
-      .refine(checkUniqueUsername, "이미 존재하는 이름입니다."),
-    email: z
-      .email()
-      .toLowerCase()
-      .trim()
-      .toLowerCase()
-      .refine(checkUniqueEmail, "이미 존재하는 이메일입니다."),
-    password: z
-      .string()
-      .min(10, "10자 이상이어야 합니다.")
-      .regex(PASSWORD_REGEX, { error: "특수기호가 포함되어야 합니다." }),
-    confirmPassword: z.string().min(PASSWORD_MIN_LENGTH),
+    username: z.string().min(2, "너무 짧습니다.").max(10, "너무 깁니다."),
+    email: z.email().toLowerCase().trim().toLowerCase(),
+    password: z.string(),
+    //.min(8, "8자 이상이어야 합니다.")
+    //.regex(PASSWORD_REGEX, { error: "특수기호가 포함되어야 합니다." }),
+    confirmPassword: z.string(), //.min(PASSWORD_MIN_LENGTH, "8자 이상이어야 합니다."),
+  })
+  .superRefine(async (data, ctx) => {
+    const checkUniqueUsername = await db.user.findUnique({
+      where: {
+        username: data.username,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const checkUniqueEmail = await db.user.findUnique({
+      where: {
+        email: data.email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (checkUniqueUsername) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이름이 이미 존재합니다.",
+        path: ["username"],
+      });
+      return;
+    }
+
+    if (checkUniqueEmail) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이메일이 이미 존재합니다.",
+        path: ["email"],
+      });
+      return;
+    }
   })
   .refine(crossCheckPassword, {
     error: "비밀번호가 일치하지 않습니다.",
@@ -69,7 +69,7 @@ const formSchema = z
 
 export async function createAccount(prevItem: any, formData: FormData) {
   const data = {
-    userName: formData.get("userName"),
+    username: formData.get("username"),
     email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
@@ -82,7 +82,7 @@ export async function createAccount(prevItem: any, formData: FormData) {
     const HashPassword = await bcrypt.hash(result.data.password, 12);
     const user = await db.user.create({
       data: {
-        username: result.data.userName,
+        username: result.data.username,
         email: result.data.email,
         password: HashPassword,
       },
@@ -90,12 +90,9 @@ export async function createAccount(prevItem: any, formData: FormData) {
         id: true,
       },
     });
-    const cookie = await getIronSession(await cookies(), {
-      cookieName: "carrot-market",
-      password: process.env.COOKIE_PASSWORD!,
-    });
+    const session = await getSession();
     //@ts-ignore
-    cookie.id = user.id;
-    await cookie.save();
+    session.id = user.id;
+    await session.save();
   }
 }
