@@ -1,7 +1,7 @@
 "use client";
 
-import { getMoreProducts } from "@/app/(tabs)/products/actions";
-import { InitialProducts } from "@/app/(tabs)/products/page";
+import { getMoreProducts } from "@/app/(tabs)/home/actions";
+import { InitialProducts } from "@/app/(tabs)/home/page";
 import { useEffect, useRef, useState } from "react";
 import ListProduct from "./list-product";
 
@@ -27,8 +27,8 @@ export default function ProductList({ initialProducts }: ProductListProps) {
           setIsLoading(true);
           const newProducts = await getMoreProducts(page + 1);
           if (newProducts.length !== 0) {
-            setPage((prev) => prev + 1);
             setProducts((prev) => [...prev, ...newProducts]);
+            setPage((prev) => prev + 1);
           } else {
             setIsLastPage(true);
           }
